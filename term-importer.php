@@ -145,8 +145,20 @@ function tim_term_import_function() {
 			$cvs_data2[$value] = $cvs_data[$key];
 		}
 		$num = count( $cvs_data2['term'] );
+ 		$k = 0;
+ 		$m = 1;
+ 		
+	for ( $j = 0; $j < $num; $k++ ) {
 
-	for ( $j = 0; $j < 6; $j++ ) {
+		// This means that it has done a loop but not added any categories.
+		if($m == $j){
+			$missed = $num - $j;
+			echo "<br /><br />Error: Did not add (" . $missed . ") categories.";
+			break;
+		}
+
+		$m = $j;	
+
 		for ( $i = 0; $i < $num; $i++ ) {
 			$data = array(
 				'term' => esc_attr( $cvs_data2['term'][$i] ),
@@ -157,20 +169,34 @@ function tim_term_import_function() {
 			//$parent_term = term_exists( 'fruits', 'product' ); // array is returned if taxonomy is given
 			//$parent_term_id = $parent_term['term_id']; // get numeric term id
 			
-			$parent_id = term_exists( $data['parent'] );
+			$parent_term = term_exists( $data['parent'] , 'wpsc_product_category' );
+			$parent_term_id = $parent_term['term_id']; // get numeric term id
 			
-			wp_insert_term(
-  				$data['term'], // the term 
-  				'wpsc_product_category', // the taxonomy
-  				array(
-    				'slug' => $data['slug'],
-    				'parent' => $parent_id,
-  				)
-			);
+			if( $data['parent'] == '0' ){
+				$is_ready = TRUE;
+			}elseif( !is_null( term_exists( $data['parent'] , 'wpsc_product_category' )) ){
+				$is_ready = TRUE;
+			}else{
+				$is_ready = FALSE;
+			}
+			
+			if( is_null(term_exists( $data['slug'] , 'wpsc_product_category' )) && $is_ready){
+				wp_insert_term(
+  					$data['term'], // the term 
+  					'wpsc_product_category', // the taxonomy
+  					array(
+    					'slug' => $data['slug'],
+    					'parent' => $parent_term_id,
+  					)
+				);
+				$j++; //This counts through the categories, loop stops when all added
+			}
 		}
+			
 	}
 	
-		echo "<br /><br />". sprintf(__("Success, your tags have been added.", "wpsc"));
+		echo "<br /><br />". sprintf(__("Success, your categories have been added.", "wpsc"));
+		echo "<br />Number of loops " . $k . ".";
 	}
 ?>
 		</div>
