@@ -176,11 +176,19 @@ function tim_term_import_function() {
 				$is_ready = TRUE;
 			}elseif( !is_null( term_exists( $data['parent'] , 'wpsc_product_category' )) ){
 				$is_ready = TRUE;
+				if(term_exists( $data['term'] , 'wpsc_product_category' , $parent_term_id )){
+					$is_ready = FALSE;
+				}
 			}else{
 				$is_ready = FALSE;
 			}
 			
-			if( is_null(term_exists( $data['slug'] , 'wpsc_product_category' )) && $is_ready){
+			if( is_null(term_exists( $data['slug'] , 'wpsc_product_category' , $parent_term_id )) && $is_ready ){
+			
+				if(term_exists($data['slug'])){
+					$data['slug'] = "caleb" . $data['slug'];
+				}
+			
 				wp_insert_term(
   					$data['term'], // the term 
   					'wpsc_product_category', // the taxonomy
@@ -189,6 +197,9 @@ function tim_term_import_function() {
     					'parent' => $parent_term_id,
   					)
 				);
+				
+				//add_action('create_wpsc_product_category', 'rocksure_fix_category_slug');
+				
 				$j++; //This counts through the categories, loop stops when all added
 			}
 		}
@@ -204,6 +215,16 @@ function tim_term_import_function() {
 <?php
 }
 
+function rocksure_fix_category_slug( $term_id ){
+
+	$term = get_term($term_id);
+	$slug = $term->slug;
+	
+	$slug = str_replace("caleb", "", $slug);
+
+	wp_update_term( $term_id , 'wpsc_product_category', array('slug' => $slug ));
+	
+}
 
 
 ?>
